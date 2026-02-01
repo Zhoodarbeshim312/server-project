@@ -6,7 +6,10 @@ import { generateToken } from "../../config/token";
 const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
-    const profile_photo = req.file ? `/uploads/${req.file.filename}` : null;
+    const profile_photo = req.file
+      ? `/uploads/${req.file.filename}`
+      : "../assets/user.png";
+
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
