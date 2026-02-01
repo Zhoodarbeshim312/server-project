@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_controller_1 = __importDefault(require("./auth.controller"));
+const multer_1 = require("../../config/multer");
 const router = (0, express_1.Router)();
 /**
  * @swagger
@@ -21,24 +22,36 @@ const router = (0, express_1.Router)();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
+ *               - name
  *               - email
  *               - password
  *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
  *               email:
  *                 type: string
  *                 example: test@mail.com
  *               password:
  *                 type: string
  *                 example: 123456
+ *               profile_photo:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Пользователь создан
+ *       400:
+ *         description: Не все обязательные поля заполнены
+ *       409:
+ *         description: Пользователь уже существует
  */
-router.post("/register", auth_controller_1.default.register);
+router.post("/register", multer_1.upload.single("profile_photo"), // Multer обрабатывает файл
+auth_controller_1.default.register);
 /**
  * @swagger
  * /auth/login:
@@ -57,11 +70,15 @@ router.post("/register", auth_controller_1.default.register);
  *             properties:
  *               email:
  *                 type: string
+ *                 example: test@mail.com
  *               password:
  *                 type: string
+ *                 example: 123456
  *     responses:
  *       200:
  *         description: Успешный вход
+ *       401:
+ *         description: Неверный email или пароль
  */
 router.post("/login", auth_controller_1.default.login);
 exports.default = router;

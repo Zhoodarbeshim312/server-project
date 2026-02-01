@@ -5,23 +5,24 @@ import { generateToken } from "../../config/token";
 
 const register = async (req: Request, res: Response) => {
   try {
-    const { profile_photo, name, email, password } = req.body;
+    const { name, email, password } = req.body;
+    const profile_photo = req.file ? `/uploads/${req.file.filename}` : null;
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Все поля (name, email, password) обязательны!",
+        message: "Все поля обязательны!",
       });
     }
-    const findUser = await prisma.user.findUnique({ where: { email } });
-    if (findUser) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: "Такой пользователь уже существует!",
+        message: "Пользователь уже существует!",
       });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { profile_photo, name, email, password: hashedPassword },
+      data: { name, email, password: hashedPassword, profile_photo },
     });
     const token = generateToken(user.id, user.email, user.role);
     res.cookie("token", token, {
@@ -30,18 +31,9 @@ const register = async (req: Request, res: Response) => {
       sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000,
     });
-    res.status(201).json({
-      success: true,
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      profile_photo: user.profile_photo,
-    });
+    res.status(201).json({ success: true, user });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: `Error in register: ${error.message || error}`,
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 

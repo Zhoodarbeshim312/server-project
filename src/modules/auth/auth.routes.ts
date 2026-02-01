@@ -1,5 +1,6 @@
 import { Router } from "express";
 import authController from "./auth.controller";
+import { upload } from "../../config/multer";
 
 const router = Router();
 
@@ -19,24 +20,39 @@ const router = Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
+ *               - name
  *               - email
  *               - password
  *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
  *               email:
  *                 type: string
  *                 example: test@mail.com
  *               password:
  *                 type: string
  *                 example: 123456
+ *               profile_photo:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Пользователь создан
+ *       400:
+ *         description: Не все обязательные поля заполнены
+ *       409:
+ *         description: Пользователь уже существует
  */
-router.post("/register", authController.register);
+router.post(
+  "/register",
+  upload.single("profile_photo"), // Multer обрабатывает файл
+  authController.register,
+);
 
 /**
  * @swagger
@@ -56,11 +72,15 @@ router.post("/register", authController.register);
  *             properties:
  *               email:
  *                 type: string
+ *                 example: test@mail.com
  *               password:
  *                 type: string
+ *                 example: 123456
  *     responses:
  *       200:
  *         description: Успешный вход
+ *       401:
+ *         description: Неверный email или пароль
  */
 router.post("/login", authController.login);
 
