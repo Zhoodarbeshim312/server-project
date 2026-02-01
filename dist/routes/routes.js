@@ -11,6 +11,7 @@ const user_routes_1 = __importDefault(require("../modules/user/user.routes"));
 const globalRouter = (0, express_1.Router)();
 const corsConfig = {
     origin: ["http://localhost:3000", "http://localhost:5173"],
+    credentials: true,
 };
 globalRouter.use("/auth", (0, cors_1.default)(corsConfig), auth_routes_1.default);
 globalRouter.use("/crud", (0, cors_1.default)(corsConfig), crud_routes_1.default);
