@@ -7,9 +7,10 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && prisma generate",
     "dev": "nodemon",
-    "start": "node ./dist/server.js"
+    "start": "node ./dist/server.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
