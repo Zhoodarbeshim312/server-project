@@ -1,10 +1,16 @@
 import "dotenv/config";
 import express from "express";
-import globalRouter from "./routes/routes";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
+import globalRouter from "./routes/routes";
 const buildApp = () => {
   const app = express();
+  const corsOptions = {
+    origin: ["http://localhost:3000", "http://localhost:5173"],
+    credentials: true,
+  };
+  app.use(cors(corsOptions));
   app.use(express.json());
   app.use(cookieParser());
   app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
