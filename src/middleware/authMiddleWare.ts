@@ -12,25 +12,29 @@ declare global {
 }
 
 const authMiddleWare = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const token = req.cookies.token;
+
+  if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Требуется Авторизация",
+      message: "Требуется авторизация",
     });
   }
+
   try {
-    const token = authHeader.split(" ")[1] as string;
     const decoded = verifyToken(token);
+
     req.userId = decoded.userId;
     req.emailId = decoded.emailId;
     req.role = decoded.role;
+
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({
       success: false,
       message: "Токен недействителен",
     });
   }
 };
+
 export default authMiddleWare;

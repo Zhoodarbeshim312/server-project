@@ -2,22 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const token_1 = require("../config/token");
 const authMiddleWare = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const token = req.cookies.token;
+    if (!token) {
         return res.status(401).json({
             success: false,
-            message: "Требуется Авторизация",
+            message: "Требуется авторизация",
         });
     }
     try {
-        const token = authHeader.split(" ")[1];
         const decoded = (0, token_1.verifyToken)(token);
         req.userId = decoded.userId;
         req.emailId = decoded.emailId;
         req.role = decoded.role;
         next();
     }
-    catch (error) {
+    catch {
         return res.status(401).json({
             success: false,
             message: "Токен недействителен",

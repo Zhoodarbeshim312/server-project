@@ -11,7 +11,7 @@ const register = async (req, res) => {
         const { name, email, password } = req.body;
         const profile_photo = req.file
             ? `/uploads/${req.file.filename}`
-            : "../assets/user.png";
+            : "/assets/user.png";
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,

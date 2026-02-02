@@ -8,6 +8,7 @@ const buildApp = () => {
   app.use(express.json());
   app.use(cookieParser());
   app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+  app.use("/assets", express.static(path.join(__dirname, "..", "assets")));
   app.get("/", (req, res) => {
     res.status(200).json({
       success: true,
