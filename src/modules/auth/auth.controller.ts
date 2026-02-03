@@ -9,24 +9,17 @@ const register = async (req: Request, res: Response) => {
     const profile_photo = req.file
       ? `/uploads/${req.file.filename}`
       : "/assets/user.png";
-
-    if (!name || !email || !password) {
+    if (!name || !email || !password)
       return res.status(400).json({
         success: false,
         message: "Все поля обязательны!",
       });
-    }
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (existingUser) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser)
       return res.status(409).json({
         success: false,
         message: "Пользователь уже существует!",
       });
-    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
@@ -39,8 +32,8 @@ const register = async (req: Request, res: Response) => {
     const token = generateToken(user.id, user.email, user.role);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: COOKIE_MAX_AGE,
     });
     res.status(201).json({
@@ -58,35 +51,29 @@ const register = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
+    if (!email || !password)
       return res.status(400).json({
         success: false,
         message: "Email и пароль обязательны!",
       });
-    }
-    const user = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (!user || !user.password) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.password)
       return res.status(401).json({
         success: false,
         message: "Неверный email или пароль!",
       });
-    }
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+    if (!isPasswordValid)
       return res.status(401).json({
         success: false,
         message: "Неверный email или пароль!",
       });
-    }
+
     const token = generateToken(user.id, user.email, user.role);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: COOKIE_MAX_AGE,
     });
     res.status(200).json({

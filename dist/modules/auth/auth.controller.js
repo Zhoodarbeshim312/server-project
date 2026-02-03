@@ -13,23 +13,17 @@ const register = async (req, res) => {
         const profile_photo = req.file
             ? `/uploads/${req.file.filename}`
             : "/assets/user.png";
-        if (!name || !email || !password) {
+        if (!name || !email || !password)
             return res.status(400).json({
                 success: false,
                 message: "Все поля обязательны!",
             });
-        }
-        const existingUser = await prisma_1.prisma.user.findUnique({
-            where: {
-                email,
-            },
-        });
-        if (existingUser) {
+        const existingUser = await prisma_1.prisma.user.findUnique({ where: { email } });
+        if (existingUser)
             return res.status(409).json({
                 success: false,
                 message: "Пользователь уже существует!",
             });
-        }
         const hashedPassword = await bcryptjs_1.default.hash(password, 10);
         const user = await prisma_1.prisma.user.create({
             data: {
@@ -42,8 +36,8 @@ const register = async (req, res) => {
         const token = (0, token_1.generateToken)(user.id, user.email, user.role);
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: COOKIE_MAX_AGE,
         });
         res.status(201).json({
@@ -61,35 +55,28 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) {
+        if (!email || !password)
             return res.status(400).json({
                 success: false,
                 message: "Email и пароль обязательны!",
             });
-        }
-        const user = await prisma_1.prisma.user.findUnique({
-            where: {
-                email,
-            },
-        });
-        if (!user || !user.password) {
+        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+        if (!user || !user.password)
             return res.status(401).json({
                 success: false,
                 message: "Неверный email или пароль!",
             });
-        }
         const isPasswordValid = await bcryptjs_1.default.compare(password, user.password);
-        if (!isPasswordValid) {
+        if (!isPasswordValid)
             return res.status(401).json({
                 success: false,
                 message: "Неверный email или пароль!",
             });
-        }
         const token = (0, token_1.generateToken)(user.id, user.email, user.role);
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: COOKIE_MAX_AGE,
         });
         res.status(200).json({
