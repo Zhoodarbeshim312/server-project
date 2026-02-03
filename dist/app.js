@@ -12,7 +12,11 @@ const routes_1 = __importDefault(require("./routes/routes"));
 const buildApp = () => {
     const app = (0, express_1.default)();
     const corsOptions = {
-        origin: ["http://localhost:3000", "http://localhost:5173"],
+        origin: [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://my-app-dun-gamma.vercel.app",
+        ],
         credentials: true,
     };
     app.use((0, cors_1.default)(corsOptions));

@@ -7,7 +7,11 @@ import globalRouter from "./routes/routes";
 const buildApp = () => {
   const app = express();
   const corsOptions = {
-    origin: ["http://localhost:3000", "http://localhost:5173"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "https://my-app-dun-gamma.vercel.app",
+    ],
     credentials: true,
   };
   app.use(cors(corsOptions));
