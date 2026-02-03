@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const prisma_1 = require("../../config/prisma");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const token_1 = require("../../config/token");
+const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
 const register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -18,7 +19,11 @@ const register = async (req, res) => {
                 message: "Все поля обязательны!",
             });
         }
-        const existingUser = await prisma_1.prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma_1.prisma.user.findUnique({
+            where: {
+                email,
+            },
+        });
         if (existingUser) {
             return res.status(409).json({
                 success: false,
@@ -27,19 +32,30 @@ const register = async (req, res) => {
         }
         const hashedPassword = await bcryptjs_1.default.hash(password, 10);
         const user = await prisma_1.prisma.user.create({
-            data: { name, email, password: hashedPassword, profile_photo },
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                profile_photo,
+            },
         });
         const token = (0, token_1.generateToken)(user.id, user.email, user.role);
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000,
+            secure: true,
+            sameSite: "none",
+            maxAge: COOKIE_MAX_AGE,
         });
-        res.status(201).json({ success: true, user });
+        res.status(201).json({
+            success: true,
+            user,
+        });
     }
     catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
     }
 };
 const login = async (req, res) => {
@@ -51,7 +67,11 @@ const login = async (req, res) => {
                 message: "Email и пароль обязательны!",
             });
         }
-        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+        const user = await prisma_1.prisma.user.findUnique({
+            where: {
+                email,
+            },
+        });
         if (!user || !user.password) {
             return res.status(401).json({
                 success: false,
@@ -68,9 +88,9 @@ const login = async (req, res) => {
         const token = (0, token_1.generateToken)(user.id, user.email, user.role);
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000,
+            secure: true,
+            sameSite: "none",
+            maxAge: COOKIE_MAX_AGE,
         });
         res.status(200).json({
             success: true,
@@ -83,7 +103,7 @@ const login = async (req, res) => {
     catch (error) {
         res.status(500).json({
             success: false,
-            error: `Error in login: ${error.message || error}`,
+            error: `Error in login: ${error.message}`,
         });
     }
 };

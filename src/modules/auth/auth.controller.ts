@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../config/prisma";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../../config/token";
-
+const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
 const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
@@ -16,7 +16,11 @@ const register = async (req: Request, res: Response) => {
         message: "Все поля обязательны!",
       });
     }
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -25,18 +29,29 @@ const register = async (req: Request, res: Response) => {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, profile_photo },
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        profile_photo,
+      },
     });
     const token = generateToken(user.id, user.email, user.role);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      secure: true,
+      sameSite: "none",
+      maxAge: COOKIE_MAX_AGE,
     });
-    res.status(201).json({ success: true, user });
+    res.status(201).json({
+      success: true,
+      user,
+    });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 };
 
@@ -49,7 +64,11 @@ const login = async (req: Request, res: Response) => {
         message: "Email и пароль обязательны!",
       });
     }
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
     if (!user || !user.password) {
       return res.status(401).json({
         success: false,
@@ -66,9 +85,9 @@ const login = async (req: Request, res: Response) => {
     const token = generateToken(user.id, user.email, user.role);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      secure: true,
+      sameSite: "none",
+      maxAge: COOKIE_MAX_AGE,
     });
     res.status(200).json({
       success: true,
@@ -80,7 +99,7 @@ const login = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: `Error in login: ${error.message || error}`,
+      error: `Error in login: ${error.message}`,
     });
   }
 };
